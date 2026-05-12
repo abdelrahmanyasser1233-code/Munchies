@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { HiPlus, HiCheck } from 'react-icons/hi';
+import { HiPlus, HiMinus, HiCheck } from 'react-icons/hi';
 import { useCart } from '../context/CartContext';
 import './ProductCard.css';
 
 export default function ProductCard({ product, index }) {
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
   const [selectedVariant, setSelectedVariant] = useState('');
   const [added, setAdded] = useState(false);
 
@@ -22,6 +22,10 @@ export default function ProductCard({ product, index }) {
   }
 
   const [quantity, setQuantity] = useState(1);
+
+  const inCartCount = items
+    .filter((item) => item.id === product.id)
+    .reduce((sum, item) => sum + item.quantity, 0);
 
   const handleAdd = () => {
     addItem(product, selectedVariant || null, quantity);
@@ -50,6 +54,9 @@ export default function ProductCard({ product, index }) {
           />
         ) : (
           <div className="product-card-image-placeholder">🍽️</div>
+        )}
+        {inCartCount > 0 && (
+          <span className="product-card-cart-badge">{inCartCount} in cart</span>
         )}
       </div>
 
@@ -81,6 +88,7 @@ export default function ProductCard({ product, index }) {
                 value={selectedVariant}
                 onChange={(e) => setSelectedVariant(e.target.value)}
               >
+                <option value="" disabled>Choose variant</option>
                 {variants.map((v, i) => (
                   <option key={i} value={typeof v === 'string' ? v : v.name || v.label}>
                     {typeof v === 'string' ? v : v.name || v.label}
@@ -88,6 +96,23 @@ export default function ProductCard({ product, index }) {
                 ))}
               </select>
             )}
+
+            <div className="qty-selector">
+              <button
+                className="qty-btn"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={quantity <= 1}
+              >
+                <HiMinus />
+              </button>
+              <span className="qty-value">{quantity}</span>
+              <button
+                className="qty-btn"
+                onClick={() => setQuantity((q) => q + 1)}
+              >
+                <HiPlus />
+              </button>
+            </div>
 
             <motion.button
               className={`add-to-cart-btn ${added ? 'added' : ''}`}

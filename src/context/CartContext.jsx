@@ -6,7 +6,7 @@ const STORAGE_KEY = 'munchies_cart';
 
 function loadCart() {
   try {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
@@ -14,7 +14,7 @@ function loadCart() {
 }
 
 function saveCart(items) {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
 function cartReducer(state, action) {

@@ -138,6 +138,24 @@ export default function Navbar({ onCartOpen }) {
               <Link to="/checkout" className="mobile-menu-link">
                 🛒 Checkout
               </Link>
+
+              <div className="mobile-menu-divider" />
+              <div className="mobile-menu-section-label">Categories</div>
+              {[
+                { id: 'Bakery', icon: '🥐' },
+                { id: 'Meals', icon: '🍕' },
+                { id: 'Drinks', icon: '🥤' },
+                { id: 'Snacks', icon: '🧁' },
+              ].map((cat) => (
+                <Link
+                  key={cat.id}
+                  to={`/?category=${cat.id}`}
+                  className="mobile-menu-link"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {cat.icon} {cat.id}
+                </Link>
+              ))}
             </motion.div>
           </>
         )}

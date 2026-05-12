@@ -46,6 +46,20 @@
   font-size: 2.5rem;
 }
 
+.product-card-cart-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--color-primary-dark);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  z-index: 1;
+  letter-spacing: 0.02em;
+}
+
 .product-card-body {
   padding: var(--space-lg);
   display: flex;

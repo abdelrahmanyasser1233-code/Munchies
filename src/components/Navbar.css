@@ -206,6 +206,21 @@
   color: var(--color-primary);
 }
 
+.mobile-menu-divider {
+  height: 1px;
+  background: var(--color-secondary-dark);
+  margin: var(--space-sm) 0;
+}
+
+.mobile-menu-section-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-tertiary);
+  padding: 0 var(--space-md);
+}
+
 @media (min-width: 600px) {
   .navbar-tagline {
     display: block;
