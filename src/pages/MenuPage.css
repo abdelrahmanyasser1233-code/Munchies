@@ -221,6 +221,45 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Search Bar */
+.menu-search-wrapper {
+  position: relative;
+  max-width: 480px;
+  margin: 0 auto var(--space-xl);
+}
+
+.menu-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary);
+  font-size: 1.2rem;
+}
+
+.menu-search-input {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-secondary-dark);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.menu-search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
+  outline: none;
+}
+
+.menu-search-input::placeholder {
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
 /* Product Grid */
 .menu-content {
   max-width: var(--max-width);

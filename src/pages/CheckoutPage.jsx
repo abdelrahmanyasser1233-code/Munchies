@@ -40,6 +40,7 @@ export default function CheckoutPage() {
   const [direction, setDirection] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [orderId, setOrderId] = useState(null);
 
   // Form state
   const [fullName, setFullName] = useState('');
@@ -89,7 +90,7 @@ export default function CheckoutPage() {
 
     try {
       setSubmitting(true);
-      await submitOrder({
+      const order = await submitOrder({
         full_name: fullName.trim(),
         phone_number: phone.replace(/[\s-]/g, ''),
         class: studentClass,
@@ -103,6 +104,7 @@ export default function CheckoutPage() {
         payment_method: paymentMethod,
       });
       clearCart();
+      setOrderId(order?.id ? order.id.slice(0, 8).toUpperCase() : null);
       setSuccess(true);
       toast.success('Order placed successfully! 🎉');
     } catch (err) {
@@ -136,6 +138,11 @@ export default function CheckoutPage() {
               ✅
             </motion.div>
             <h2>Order Placed!</h2>
+            {orderId && (
+              <div className="checkout-order-id">
+                Order #{orderId}
+              </div>
+            )}
             <p>Your order has been submitted. Please head to the canteen to pick it up!</p>
             <Link to="/" className="btn btn-primary btn-lg">
               Back to Menu

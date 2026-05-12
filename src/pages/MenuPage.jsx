@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
+import { HiOutlineSearch } from 'react-icons/hi';
 import { fetchProducts } from '../lib/supabase';
 import ProductCard, { ProductCardSkeleton } from '../components/ProductCard';
 import './MenuPage.css';
@@ -8,7 +10,14 @@ export default function MenuPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat) setActiveCategory(cat);
+  }, [searchParams]);
 
   useEffect(() => {
     loadProducts();
@@ -34,9 +43,20 @@ export default function MenuPage() {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    if (activeCategory === 'All') return products;
-    return products.filter((p) => p.category === activeCategory);
-  }, [products, activeCategory]);
+    let result = products;
+    if (activeCategory !== 'All') {
+      result = result.filter((p) => p.category === activeCategory);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name?.toLowerCase().includes(q) ||
+          p.description?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [products, activeCategory, searchQuery]);
 
   return (
     <motion.div
@@ -72,7 +92,12 @@ export default function MenuPage() {
               <p>Fresh, delicious, and made with love —<br/>order your favorites and skip the line!</p>
             </motion.div>
             <div className="menu-hero-action">
-              <span className="view-full">View Full Menu &rarr;</span>
+              <button
+                className="view-full"
+                onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                View Full Menu &rarr;
+              </button>
             </div>
           </div>
         </div>
@@ -80,6 +105,18 @@ export default function MenuPage() {
 
       {/* Content */}
       <div className="menu-content">
+        {/* Search Bar */}
+        <div className="menu-search-wrapper">
+          <HiOutlineSearch className="menu-search-icon" />
+          <input
+            type="text"
+            className="menu-search-input"
+            placeholder="Search for items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
         {loading ? (
           <div className="menu-skeleton-grid">
             {[...Array(8)].map((_, i) => (
@@ -163,7 +200,12 @@ export default function MenuPage() {
               <h2>happier days!</h2>
             </div>
           </div>
-          <button className="healthy-banner-btn">Learn More &rarr;</button>
+          <button
+            className="healthy-banner-btn"
+            onClick={() => window.open('https://www.who.int/news-room/fact-sheets/detail/healthy-diet', '_blank', 'noopener')}
+          >
+            Learn More &rarr;
+          </button>
         </div>
       </div>
     </motion.div>

@@ -164,9 +164,25 @@ export default function AdminDashboard() {
       toast.error('Product name is required');
       return;
     }
-    if (!formData.price || isNaN(Number(formData.price))) {
+    if (formData.name.trim().length > 100) {
+      toast.error('Product name must be 100 characters or less');
+      return;
+    }
+    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) < 0) {
       toast.error('Valid price is required');
       return;
+    }
+    if (formData.description && formData.description.length > 500) {
+      toast.error('Description must be 500 characters or less');
+      return;
+    }
+    if (formData.image_url && !imageFile) {
+      try {
+        new URL(formData.image_url);
+      } catch {
+        toast.error('Image URL must be a valid URL');
+        return;
+      }
     }
 
     try {
@@ -627,9 +643,13 @@ export default function AdminDashboard() {
                     placeholder="Short description of the product..."
                     rows={3}
                     style={{ resize: 'vertical' }}
+                    maxLength={500}
                     value={formData.description}
                     onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                   />
+                  <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--color-text-tertiary)', marginTop: '4px' }}>
+                    {formData.description.length}/500
+                  </div>
                 </div>
 
                 {/* Price & Category */}
