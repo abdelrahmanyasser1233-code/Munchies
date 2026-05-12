@@ -117,6 +117,40 @@ export default function MenuPage() {
 
       {/* Content */}
       <div className="menu-content">
+        {/* Browse Categories Section */}
+        <div id="categories" className="browse-categories-section">
+          <h2>Browse <span>Categories</span></h2>
+          <div className="category-cards-grid">
+            {[
+              { id: 'Bakery', title: 'Bakery', desc: 'Freshly baked goodness', icon: '🥐' },
+              { id: 'Meals', title: 'Meals', desc: 'Wholesome and satisfying meals', icon: '🍕' },
+              { id: 'Drinks', title: 'Drinks', desc: 'Refreshing and energizing', icon: '🥤' },
+              { id: 'Snacks', title: 'Snacks', desc: 'Tasty bites for every mood', icon: '🧁' }
+            ].map((cat, i) => (
+              <motion.div
+                key={cat.id}
+                className={`category-card ${activeCategory === cat.id ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat.id === activeCategory ? 'All' : cat.id)}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <div className="category-icon-wrapper">
+                  <div className="category-icon-inner">{cat.icon}</div>
+                </div>
+                <div className="category-card-text">
+                  <h3>{cat.title}</h3>
+                  <p>{cat.desc}</p>
+                </div>
+                <div className="category-card-arrow">&rarr;</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
         {/* Search Bar */}
         <div className="menu-search-wrapper">
           <HiOutlineSearch className="menu-search-icon" />
@@ -174,40 +208,6 @@ export default function MenuPage() {
             </div>
           </>
         )}
-
-        {/* Browse Categories Section */}
-        <div id="categories" className="browse-categories-section">
-          <h2>Browse <span>Categories</span></h2>
-          <div className="category-cards-grid">
-            {[
-              { id: 'Bakery', title: 'Bakery', desc: 'Freshly baked goodness', icon: '🥐' },
-              { id: 'Meals', title: 'Meals', desc: 'Wholesome and satisfying meals', icon: '🍕' },
-              { id: 'Drinks', title: 'Drinks', desc: 'Refreshing and energizing', icon: '🥤' },
-              { id: 'Snacks', title: 'Snacks', desc: 'Tasty bites for every mood', icon: '🧁' }
-            ].map((cat, i) => (
-              <motion.div
-                key={cat.id}
-                className={`category-card ${activeCategory === cat.id ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat.id === activeCategory ? 'All' : cat.id)}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <div className="category-icon-wrapper">
-                  <div className="category-icon-inner">{cat.icon}</div>
-                </div>
-                <div className="category-card-text">
-                  <h3>{cat.title}</h3>
-                  <p>{cat.desc}</p>
-                </div>
-                <div className="category-card-arrow">&rarr;</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
 
         {/* Bottom Banner */}
         <div className="healthy-choices-banner">
