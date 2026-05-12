@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { HiArrowRight, HiArrowLeft, HiCheck } from 'react-icons/hi';
+import confetti from 'canvas-confetti';
 import { useCart } from '../context/CartContext';
 import { submitOrder } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -41,6 +42,18 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [orderId, setOrderId] = useState(null);
+
+  useEffect(() => {
+    if (success) {
+      const end = Date.now() + 800;
+      const frame = () => {
+        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
+        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      };
+      frame();
+    }
+  }, [success]);
 
   // Form state
   const [fullName, setFullName] = useState('');

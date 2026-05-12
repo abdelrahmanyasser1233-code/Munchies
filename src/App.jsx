@@ -52,6 +52,8 @@ export default function App() {
             success: {
               iconTheme: { primary: '#8B9A46', secondary: '#fff' },
             },
+            duration: 3000,
+            className: 'toast-bounce',
           }}
         />
         <Cart isOpen={cartOpen} onClose={() => setCartOpen(false)} />

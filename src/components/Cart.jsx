@@ -131,7 +131,15 @@ export default function Cart({ isOpen, onClose }) {
               >
                 <div className="cart-total-row">
                   <span className="cart-total-label">Total</span>
-                  <span className="cart-total-value">{totalPrice} EGP</span>
+                  <motion.span
+                    className="cart-total-value"
+                    key={totalPrice}
+                    initial={{ scale: 1.15 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  >
+                    {totalPrice} EGP
+                  </motion.span>
                 </div>
 
                 <motion.button

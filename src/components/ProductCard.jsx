@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { HiPlus, HiMinus, HiCheck } from 'react-icons/hi';
 import { useCart } from '../context/CartContext';
@@ -8,6 +8,8 @@ export default function ProductCard({ product, index }) {
   const { addItem, items } = useCart();
   const [selectedVariant, setSelectedVariant] = useState('');
   const [added, setAdded] = useState(false);
+  const [ripple, setRipple] = useState(null);
+  const btnRef = useRef(null);
 
   let variants = [];
   try {
@@ -27,7 +29,14 @@ export default function ProductCard({ product, index }) {
     .filter((item) => item.id === product.id)
     .reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleAdd = () => {
+  const handleAdd = (e) => {
+    const rect = btnRef.current?.getBoundingClientRect();
+    if (rect) {
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      setRipple({ x, y, key: Date.now() });
+      setTimeout(() => setRipple(null), 500);
+    }
     addItem(product, selectedVariant || null, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
@@ -37,7 +46,8 @@ export default function ProductCard({ product, index }) {
     <motion.div
       className="product-card"
       initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.5, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{
         y: -8,
@@ -115,6 +125,7 @@ export default function ProductCard({ product, index }) {
             </div>
 
             <motion.button
+              ref={btnRef}
               className={`add-to-cart-btn ${added ? 'added' : ''}`}
               onClick={handleAdd}
               whileHover={{ scale: 1.05 }}
@@ -122,6 +133,13 @@ export default function ProductCard({ product, index }) {
               transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               title="Add to Cart"
             >
+              {ripple && (
+                <span
+                  key={ripple.key}
+                  className="ripple-effect"
+                  style={{ left: ripple.x, top: ripple.y }}
+                />
+              )}
               {added ? <HiCheck /> : <HiPlus />}
             </motion.button>
           </div>

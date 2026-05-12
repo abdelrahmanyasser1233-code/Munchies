@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
-import { HiOutlineSearch } from 'react-icons/hi';
+import { HiOutlineSearch, HiArrowUp } from 'react-icons/hi';
 import { fetchProducts } from '../lib/supabase';
 import ProductCard, { ProductCardSkeleton } from '../components/ProductCard';
 import './MenuPage.css';
@@ -13,6 +13,10 @@ export default function MenuPage() {
   const [searchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const heroRef = useRef(null);
+  const { scrollY } = useScroll();
+  const heroParallaxY = useTransform(scrollY, [0, 400], [0, -60]);
 
   useEffect(() => {
     const cat = searchParams.get('category');
@@ -21,6 +25,12 @@ export default function MenuPage() {
 
   useEffect(() => {
     loadProducts();
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => setShowBackToTop(window.scrollY > 500);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   async function loadProducts() {
@@ -67,7 +77,7 @@ export default function MenuPage() {
       transition={{ duration: 0.3 }}
     >
       {/* Hero */}
-      <section className="menu-hero">
+      <section className="menu-hero" ref={heroRef}>
         <div className="menu-hero-container">
           <motion.div
             className="menu-hero-banner"
@@ -75,10 +85,12 @@ export default function MenuPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <picture>
-              <source media="(max-width: 768px)" srcSet="/Mobile.png" />
-              <img src="/Desktop.png" alt="Munchies Hero Background" className="hero-image" />
-            </picture>
+            <motion.div style={{ y: heroParallaxY }}>
+              <picture>
+                <source media="(max-width: 768px)" srcSet="/Mobile.png" />
+                <img src="/Desktop.png" alt="Munchies Hero Background" className="hero-image" />
+              </picture>
+            </motion.div>
           </motion.div>
 
           <div className="menu-hero-text-wrapper">
@@ -172,11 +184,17 @@ export default function MenuPage() {
               { id: 'Meals', title: 'Meals', desc: 'Wholesome and satisfying meals', icon: '🍕' },
               { id: 'Drinks', title: 'Drinks', desc: 'Refreshing and energizing', icon: '🥤' },
               { id: 'Snacks', title: 'Snacks', desc: 'Tasty bites for every mood', icon: '🧁' }
-            ].map(cat => (
-              <div 
-                key={cat.id} 
+            ].map((cat, i) => (
+              <motion.div
+                key={cat.id}
                 className={`category-card ${activeCategory === cat.id ? 'active' : ''}`}
                 onClick={() => setActiveCategory(cat.id === activeCategory ? 'All' : cat.id)}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
               >
                 <div className="category-icon-wrapper">
                   <div className="category-icon-inner">{cat.icon}</div>
@@ -186,7 +204,7 @@ export default function MenuPage() {
                   <p>{cat.desc}</p>
                 </div>
                 <div className="category-card-arrow">&rarr;</div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -208,6 +226,24 @@ export default function MenuPage() {
           </button>
         </div>
       </div>
+
+      {/* Back to Top */}
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            className="back-to-top-btn"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.8 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <HiArrowUp />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
