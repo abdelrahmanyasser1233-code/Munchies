@@ -486,6 +486,7 @@ export default function AdminDashboard() {
                 <table className="admin-table">
                   <thead>
                     <tr>
+                      <th>Name</th>
                       <th>Phone</th>
                       <th>Class</th>
                       <th>Items</th>
@@ -501,11 +502,12 @@ export default function AdminDashboard() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: idx * 0.03 }}
                       >
-                        <td style={{ fontWeight: 600 }}>{order.phone_number}</td>
+                        <td style={{ fontWeight: 600 }}>{order.full_name || '—'}</td>
+                        <td>{order.phone_number}</td>
                         <td>{order.class || '—'}</td>
                         <td>
                           <span className="order-items-preview">
-                            {formatOrderItems(order.items_json)}
+                            {formatOrderItems(order.items ?? order.items_json)}
                           </span>
                         </td>
                         <td>

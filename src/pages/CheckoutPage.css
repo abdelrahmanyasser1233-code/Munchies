@@ -275,6 +275,76 @@
   color: white;
 }
 
+/* Slide-down transfer details (InstaPay / Telda) */
+.payment-method-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-transfer {
+  overflow: hidden;
+}
+
+.payment-transfer-inner {
+  margin-top: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+.payment-transfer-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: 6px;
+}
+
+.payment-transfer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.payment-transfer-value {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.payment-transfer-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  font-family: var(--font-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.payment-transfer-copy:hover {
+  background: var(--color-primary-dark);
+}
+
+.payment-transfer-note {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
 /* Form Actions */
 .form-actions {
   display: flex;

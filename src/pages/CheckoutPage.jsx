@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { HiArrowRight, HiArrowLeft, HiCheck } from 'react-icons/hi';
+import { HiArrowRight, HiArrowLeft, HiCheck, HiOutlineClipboardCopy } from 'react-icons/hi';
 import { useCart } from '../context/CartContext';
 import { submitOrder } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -15,8 +15,28 @@ const CLASSES = [
 
 const PAYMENT_METHODS = [
   { id: 'cash', name: 'Cash', desc: 'Pay at the counter', icon: '💵' },
-  { id: 'instapay', name: 'InstaPay', desc: 'Bank instant transfer', icon: '🏦' },
-  { id: 'telda', name: 'Telda', desc: 'Pay via Telda app', icon: '💳' },
+  {
+    id: 'instapay',
+    name: 'InstaPay',
+    desc: 'Bank instant transfer',
+    icon: '🏦',
+    transfer: {
+      label: 'InstaPay Number',
+      value: '01067216723',
+      note: 'Send the payment to this number, then place your order.',
+    },
+  },
+  {
+    id: 'telda',
+    name: 'Telda',
+    desc: 'Pay via Telda app',
+    icon: '💳',
+    transfer: {
+      label: 'Telda Username',
+      value: '@bodyyasser10',
+      note: 'Send the payment to this username, then place your order.',
+    },
+  },
 ];
 
 const slideVariants = {
@@ -49,6 +69,20 @@ export default function CheckoutPage() {
 
   // Errors
   const [errors, setErrors] = useState({});
+
+  // Copy-to-clipboard feedback for transfer details
+  const [copiedId, setCopiedId] = useState(null);
+
+  const handleCopy = async (value, id) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedId(id);
+      toast.success('Copied to clipboard!');
+      setTimeout(() => setCopiedId((curr) => (curr === id ? null : curr)), 1500);
+    } catch {
+      toast.error('Could not copy — please copy it manually.');
+    }
+  };
 
   const validateStep1 = () => {
     const newErrors = {};
@@ -351,31 +385,81 @@ export default function CheckoutPage() {
                 </h3>
 
                 <div className="payment-methods">
-                  {PAYMENT_METHODS.map((pm) => (
-                    <motion.div
-                      key={pm.id}
-                      className={`payment-card ${paymentMethod === pm.id ? 'selected' : ''}`}
-                      onClick={() => {
-                        setPaymentMethod(pm.id);
-                        if (errors.payment) setErrors({});
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="payment-card-icon">{pm.icon}</div>
-                      <div className="payment-card-info">
-                        <div className="payment-card-name">{pm.name}</div>
-                        <div className="payment-card-desc">{pm.desc}</div>
+                  {PAYMENT_METHODS.map((pm) => {
+                    const isSelected = paymentMethod === pm.id;
+                    return (
+                      <div key={pm.id} className="payment-method-group">
+                        <motion.div
+                          className={`payment-card ${isSelected ? 'selected' : ''}`}
+                          onClick={() => {
+                            setPaymentMethod(pm.id);
+                            if (errors.payment) setErrors({});
+                          }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className="payment-card-icon">{pm.icon}</div>
+                          <div className="payment-card-info">
+                            <div className="payment-card-name">{pm.name}</div>
+                            <div className="payment-card-desc">{pm.desc}</div>
+                          </div>
+                          <motion.div
+                            className="payment-card-check"
+                            animate={isSelected ? { scale: [1.2, 1] } : {}}
+                            transition={{ type: 'spring', stiffness: 400 }}
+                          >
+                            {isSelected && <HiCheck size={14} />}
+                          </motion.div>
+                        </motion.div>
+
+                        {/* Slide-down transfer details (InstaPay / Telda) */}
+                        <AnimatePresence initial={false}>
+                          {isSelected && pm.transfer && (
+                            <motion.div
+                              className="payment-transfer"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            >
+                              <div className="payment-transfer-inner">
+                                <div className="payment-transfer-label">
+                                  {pm.transfer.label}
+                                </div>
+                                <div className="payment-transfer-row">
+                                  <span className="payment-transfer-value">
+                                    {pm.transfer.value}
+                                  </span>
+                                  <motion.button
+                                    type="button"
+                                    className="payment-transfer-copy"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopy(pm.transfer.value, pm.id);
+                                    }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    title="Copy"
+                                  >
+                                    {copiedId === pm.id ? (
+                                      <>
+                                        <HiCheck size={15} /> Copied
+                                      </>
+                                    ) : (
+                                      <>
+                                        <HiOutlineClipboardCopy size={15} /> Copy
+                                      </>
+                                    )}
+                                  </motion.button>
+                                </div>
+                                <p className="payment-transfer-note">{pm.transfer.note}</p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                      <motion.div
-                        className="payment-card-check"
-                        animate={paymentMethod === pm.id ? { scale: [1.2, 1] } : {}}
-                        transition={{ type: 'spring', stiffness: 400 }}
-                      >
-                        {paymentMethod === pm.id && <HiCheck size={14} />}
-                      </motion.div>
-                    </motion.div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <AnimatePresence>

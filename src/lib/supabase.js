@@ -84,16 +84,48 @@ export async function deleteProduct(id) {
 /* ─── Order Operations ─── */
 
 export async function submitOrder(orderData) {
-  const { data, error } = await supabase
-    .from('orders')
-    .insert([orderData])
-    .select();
+  // The live `orders` table has varied across setup scripts: some deployments
+  // use an `items` (JSONB) column, others `items_json` (TEXT), and `full_name`
+  // may or may not exist. PostgREST rejects the whole insert if it sees a
+  // column it doesn't know, so we try the richest payload first and then
+  // progressively drop columns the schema doesn't have.
+  const base = {
+    phone_number: orderData.phone_number,
+    class: orderData.class,
+    payment_method: orderData.payment_method,
+  };
+  const items = orderData.items || [];
 
-  if (error) {
-    console.error('submitOrder error:', error);
-    throw error;
+  const attempts = [
+    { ...base, full_name: orderData.full_name, items },
+    { ...base, full_name: orderData.full_name, items_json: JSON.stringify(items) },
+    { ...base, items },
+    { ...base, items_json: JSON.stringify(items) },
+  ];
+
+  let lastError;
+  for (const payload of attempts) {
+    const { data, error } = await supabase
+      .from('orders')
+      .insert([payload])
+      .select();
+
+    if (!error) return data?.[0] || data;
+
+    lastError = error;
+    // Only keep retrying when the failure is a column/schema mismatch.
+    // Bail immediately on anything else (e.g. RLS, network) so we surface it.
+    const msg = (error.message || '').toLowerCase();
+    const schemaIssue =
+      error.code === 'PGRST204' ||
+      msg.includes('column') ||
+      msg.includes('schema cache');
+    if (!schemaIssue) break;
+    console.warn('submitOrder: retrying with a reduced payload —', error.message);
   }
-  return data?.[0] || data;
+
+  console.error('submitOrder error:', lastError);
+  throw lastError;
 }
 
 export async function fetchOrders() {
