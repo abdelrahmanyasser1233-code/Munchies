@@ -21,12 +21,18 @@ CREATE TABLE IF NOT EXISTS public.products (
 -- ═══════════════════════════════════════
 CREATE TABLE IF NOT EXISTS public.orders (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  full_name TEXT,
   phone_number TEXT NOT NULL,
   class TEXT,
-  items_json TEXT NOT NULL,
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
   payment_method TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- If the orders table already exists from an older setup, make sure the
+-- columns the app needs are present. These are safe to run repeatedly.
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS items JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 -- ═══════════════════════════════════════
 -- 3. Disable RLS (for development)
