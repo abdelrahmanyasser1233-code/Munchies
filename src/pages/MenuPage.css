@@ -274,7 +274,7 @@
 
 .menu-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-lg);
 }
 
@@ -336,7 +336,7 @@
 /* Skeleton Grid */
 .menu-skeleton-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-lg);
 }
 
@@ -349,8 +349,9 @@
     border-radius: var(--radius-2xl); /* Still keeping very soft corners on mobile */
   }
 
-  .menu-grid {
-    grid-template-columns: 1fr;
+  .menu-grid,
+  .menu-skeleton-grid {
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-md);
   }
 
@@ -372,7 +373,8 @@
 }
 
 @media (max-width: 480px) {
-  .menu-grid {
+  .menu-grid,
+  .menu-skeleton-grid {
     grid-template-columns: 1fr;
   }
 }

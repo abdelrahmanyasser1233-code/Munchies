@@ -13,7 +13,7 @@
 .product-card-image-wrapper {
   position: relative;
   width: 100%;
-  padding-top: 100%;
+  padding-top: 75%; /* 4:3 aspect ratio */
   overflow: hidden;
   background: var(--color-secondary);
 }
@@ -24,7 +24,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover; /* fill the frame without distorting proportions */
   transition: transform 0.4s ease;
 }
 
@@ -132,18 +132,29 @@
 .product-card-footer {
   margin-top: auto;
   display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-md);
   width: 100%;
 }
 
 .product-card-action-group {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-xs);
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+/* Variant dropdown takes a full row above the qty / add controls */
+.product-card-action-group .product-card-variant-select {
+  flex: 1 1 100%;
+}
+
+.product-card-action-group .qty-selector,
+.product-card-action-group .add-to-cart-btn {
+  flex: 0 0 auto;
 }
 
 .qty-selector {
@@ -307,54 +318,5 @@
   margin-top: var(--space-sm);
 }
 
-@media (max-width: 480px) {
-  /* Keep price and button side-by-side on mobile, just adjust gaps if needed */
-  .product-card-footer {
-    flex-direction: row;
-    align-items: center;
-  }
-}
-
-@media (min-width: 768px) {
-  .product-card {
-    flex-direction: row;
-    align-items: stretch;
-    border-radius: var(--radius-2xl);
-    height: 140px; /* Fixed height for sleek horizontal layout */
-  }
-  
-  .product-card-image-wrapper {
-    flex: 0 0 140px;
-    padding-top: 0;
-    height: 100%;
-  }
-
-  .product-card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-lg) var(--space-xl);
-    gap: var(--space-xl);
-  }
-
-  .product-card-info {
-    justify-content: center;
-    flex: 1;
-  }
-  
-  .product-card-footer {
-    flex: 0 0 auto;
-    width: auto;
-    margin-top: 0;
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-xl);
-  }
-
-  .product-card-action-group {
-    flex-direction: row;
-    align-items: center;
-  }
-}
+/* Vertical product cards at every breakpoint — the responsive column count
+   is handled by .menu-grid in MenuPage.css. */
