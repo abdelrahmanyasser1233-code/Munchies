@@ -55,7 +55,9 @@ export default function MenuPage() {
   const filteredProducts = useMemo(() => {
     let result = products;
     if (activeCategory !== 'All') {
-      result = result.filter((p) => p.category === activeCategory);
+      result = result.filter(
+        (p) => p.category?.toLowerCase() === activeCategory.toLowerCase()
+      );
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -125,7 +127,8 @@ export default function MenuPage() {
               { id: 'Bakery', title: 'Bakery', desc: 'Freshly baked goodness', icon: '🥐' },
               { id: 'Meals', title: 'Meals', desc: 'Wholesome and satisfying meals', icon: '🍕' },
               { id: 'Drinks', title: 'Drinks', desc: 'Refreshing and energizing', icon: '🥤' },
-              { id: 'Snacks', title: 'Snacks', desc: 'Tasty bites for every mood', icon: '🧁' }
+              { id: 'Snacks', title: 'Snacks', desc: 'Tasty bites for every mood', icon: '🧁' },
+              { id: 'Combos', title: 'Combos', desc: 'Bigger bites, better value', icon: '🍱' }
             ].map((cat, i) => (
               <motion.div
                 key={cat.id}
