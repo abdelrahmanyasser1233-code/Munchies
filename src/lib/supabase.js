@@ -96,7 +96,14 @@ export async function submitOrder(orderData) {
   };
   const items = orderData.items || [];
 
+  // Richest payload includes the optional full_name + payment_proof_url.
+  const rich = { ...base };
+  if (orderData.full_name) rich.full_name = orderData.full_name;
+  if (orderData.payment_proof_url) rich.payment_proof_url = orderData.payment_proof_url;
+
   const attempts = [
+    { ...rich, items },
+    { ...rich, items_json: JSON.stringify(items) },
     { ...base, full_name: orderData.full_name, items },
     { ...base, full_name: orderData.full_name, items_json: JSON.stringify(items) },
     { ...base, items },
@@ -155,6 +162,29 @@ export async function uploadProductImage(file) {
 
   if (uploadError) {
     console.error('uploadProductImage error:', uploadError);
+    throw uploadError;
+  }
+
+  const { data } = supabase
+    .storage
+    .from('products')
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+}
+
+export async function uploadPaymentProof(file) {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+  const filePath = `payment-proofs/${fileName}`;
+
+  const { error: uploadError } = await supabase
+    .storage
+    .from('products')
+    .upload(filePath, file);
+
+  if (uploadError) {
+    console.error('uploadPaymentProof error:', uploadError);
     throw uploadError;
   }
 

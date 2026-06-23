@@ -507,6 +507,7 @@ export default function AdminDashboard() {
                       <th>Class</th>
                       <th>Items</th>
                       <th>Payment</th>
+                      <th>Proof</th>
                       <th>Date</th>
                     </tr>
                   </thead>
@@ -530,6 +531,20 @@ export default function AdminDashboard() {
                           <span className={`order-payment-badge ${order.payment_method}`}>
                             {order.payment_method}
                           </span>
+                        </td>
+                        <td>
+                          {order.payment_proof_url ? (
+                            <a
+                              href={order.payment_proof_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: 'var(--color-primary-dark)', fontWeight: 700 }}
+                            >
+                              View
+                            </a>
+                          ) : (
+                            '—'
+                          )}
                         </td>
                         <td style={{ color: 'var(--color-text-tertiary)', fontSize: '0.85rem' }}>
                           {formatDate(order.created_at)}

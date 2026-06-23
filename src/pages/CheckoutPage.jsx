@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { HiArrowRight, HiArrowLeft, HiCheck, HiOutlineClipboardCopy } from 'react-icons/hi';
+import {
+  HiArrowRight,
+  HiArrowLeft,
+  HiCheck,
+  HiOutlineClipboardCopy,
+  HiX,
+  HiOutlineCloudUpload,
+  HiLockClosed,
+} from 'react-icons/hi';
 import confetti from 'canvas-confetti';
 import { useCart } from '../context/CartContext';
-import { submitOrder } from '../lib/supabase';
+import { submitOrder, uploadPaymentProof } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import './CheckoutPage.css';
 
@@ -87,6 +95,12 @@ export default function CheckoutPage() {
   // Copy-to-clipboard feedback for transfer details
   const [copiedId, setCopiedId] = useState(null);
 
+  // Payment-proof confirmation modal
+  const [proofModalOpen, setProofModalOpen] = useState(false);
+  const [proofFile, setProofFile] = useState(null);
+  const [proofPreview, setProofPreview] = useState('');
+  const [modalErrors, setModalErrors] = useState({});
+
   const handleCopy = async (value, id) => {
     try {
       await navigator.clipboard.writeText(value);
@@ -129,34 +143,100 @@ export default function CheckoutPage() {
     setErrors({});
   };
 
-  const handleSubmit = async () => {
+  // Methods that require the customer to send a transfer first need a proof screenshot.
+  const selectedMethod = PAYMENT_METHODS.find((p) => p.id === paymentMethod);
+  const requiresProof = !!selectedMethod?.transfer;
+
+  // Core order submission. `proofUrl` is the uploaded screenshot URL (or null for cash).
+  const placeOrder = async (proofUrl) => {
+    const order = await submitOrder({
+      full_name: fullName.trim(),
+      phone_number: phone.replace(/[\s-]/g, ''),
+      class: studentClass,
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        variant: item.variant,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      payment_method: paymentMethod,
+      payment_proof_url: proofUrl || null,
+    });
+    clearCart();
+    setOrderId(order?.id ? order.id.slice(0, 8).toUpperCase() : null);
+    setSuccess(true);
+    toast.success('Order placed successfully! 🎉');
+  };
+
+  // "Place Order" click — open the proof modal for transfer methods, submit directly for cash.
+  const handlePlaceOrder = async () => {
     if (!paymentMethod) {
       setErrors({ payment: 'Please select a payment method' });
       return;
     }
 
+    if (requiresProof) {
+      setModalErrors({});
+      setProofModalOpen(true);
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const order = await submitOrder({
-        full_name: fullName.trim(),
-        phone_number: phone.replace(/[\s-]/g, ''),
-        class: studentClass,
-        items: items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          variant: item.variant,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        payment_method: paymentMethod,
-      });
-      clearCart();
-      setOrderId(order?.id ? order.id.slice(0, 8).toUpperCase() : null);
-      setSuccess(true);
-      toast.success('Order placed successfully! 🎉');
+      await placeOrder(null);
     } catch (err) {
       console.error('Order error:', err);
       toast.error('Failed to place order. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleProofSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setModalErrors((prev) => ({ ...prev, proof: 'Please choose an image file' }));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setModalErrors((prev) => ({ ...prev, proof: 'Image must be 5MB or smaller' }));
+      return;
+    }
+    setProofFile(file);
+    setModalErrors((prev) => ({ ...prev, proof: null }));
+    const reader = new FileReader();
+    reader.onload = (ev) => setProofPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const closeProofModal = () => {
+    if (submitting) return;
+    setProofModalOpen(false);
+  };
+
+  // Modal "Confirm Order" — validate, upload the proof, then submit.
+  const handleConfirmOrder = async () => {
+    const newErrors = {};
+    if (!fullName.trim()) newErrors.fullName = 'Full name is required';
+    if (!phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\d{10,15}$/.test(phone.replace(/[\s-]/g, ''))) {
+      newErrors.phone = 'Enter a valid phone number';
+    }
+    if (!proofFile) newErrors.proof = 'Payment proof screenshot is required';
+    setModalErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    try {
+      setSubmitting(true);
+      const proofUrl = await uploadPaymentProof(proofFile);
+      await placeOrder(proofUrl);
+      setProofModalOpen(false);
+    } catch (err) {
+      console.error('Order error:', err);
+      toast.error('Could not upload proof / place order. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -507,7 +587,7 @@ export default function CheckoutPage() {
                   </motion.button>
                   <motion.button
                     className="btn btn-primary"
-                    onClick={handleSubmit}
+                    onClick={handlePlaceOrder}
                     disabled={submitting}
                     whileHover={{ scale: submitting ? 1 : 1.02 }}
                     whileTap={{ scale: submitting ? 1 : 0.98 }}
@@ -519,7 +599,7 @@ export default function CheckoutPage() {
                       </>
                     ) : (
                       <>
-                        Place Order <HiCheck />
+                        {requiresProof ? 'Continue' : 'Place Order'} <HiCheck />
                       </>
                     )}
                   </motion.button>
@@ -553,6 +633,150 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* ═══ Payment Proof Confirmation Modal ═══ */}
+      <AnimatePresence>
+        {proofModalOpen && (
+          <motion.div
+            className="proof-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeProofModal}
+          >
+            <motion.div
+              className="proof-modal"
+              initial={{ opacity: 0, scale: 0.92, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 24 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="proof-modal-close" onClick={closeProofModal} aria-label="Close">
+                <HiX />
+              </button>
+
+              <div className="proof-modal-icon">📋</div>
+              <h2 className="proof-modal-title">Confirm Your Order</h2>
+              <p className="proof-modal-subtitle">
+                Please enter your details and upload your payment screenshot so we can
+                verify your payment faster.
+              </p>
+
+              {/* Full name */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="proofName">
+                  Full Name <span className="req">*</span>
+                </label>
+                <input
+                  id="proofName"
+                  type="text"
+                  className={`form-input ${modalErrors.fullName ? 'error' : ''}`}
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  maxLength={50}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    if (modalErrors.fullName) setModalErrors((p) => ({ ...p, fullName: null }));
+                  }}
+                />
+                {modalErrors.fullName && (
+                  <div className="form-error">⚠️ {modalErrors.fullName}</div>
+                )}
+              </div>
+
+              {/* Phone */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="proofPhone">
+                  Phone Number <span className="req">*</span>
+                </label>
+                <input
+                  id="proofPhone"
+                  type="tel"
+                  className={`form-input ${modalErrors.phone ? 'error' : ''}`}
+                  placeholder="e.g. 01012345678"
+                  value={phone}
+                  maxLength={15}
+                  onChange={(e) => {
+                    setPhone(e.target.value.replace(/[^0-9]/g, ''));
+                    if (modalErrors.phone) setModalErrors((p) => ({ ...p, phone: null }));
+                  }}
+                />
+                {modalErrors.phone && (
+                  <div className="form-error">⚠️ {modalErrors.phone}</div>
+                )}
+              </div>
+
+              {/* Payment proof upload */}
+              <div className="form-group">
+                <label className="form-label">
+                  Payment Proof (Screenshot) <span className="req">*</span>
+                </label>
+                <label
+                  className={`proof-upload ${proofPreview ? 'has-image' : ''} ${modalErrors.proof ? 'error' : ''}`}
+                  htmlFor="proof-upload-input"
+                >
+                  {proofPreview ? (
+                    <img src={proofPreview} alt="Payment proof preview" className="proof-upload-preview" />
+                  ) : (
+                    <>
+                      <div className="proof-upload-icon"><HiOutlineCloudUpload /></div>
+                      <div className="proof-upload-title">Click to upload or drag and drop</div>
+                      <div className="proof-upload-hint">PNG, JPG, JPEG, WEBP (Max 5MB)</div>
+                    </>
+                  )}
+                  <span className="proof-upload-btn">
+                    {proofPreview ? 'Change Image' : 'Choose Image'}
+                  </span>
+                  <input
+                    id="proof-upload-input"
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    style={{ display: 'none' }}
+                    onChange={handleProofSelect}
+                  />
+                </label>
+                {modalErrors.proof && (
+                  <div className="form-error">⚠️ {modalErrors.proof}</div>
+                )}
+              </div>
+
+              <div className="proof-modal-secure">
+                <HiLockClosed /> Your payment information is secure and will only be used to
+                verify your order.
+              </div>
+
+              <div className="proof-modal-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={closeProofModal}
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+                <motion.button
+                  className="btn btn-primary"
+                  onClick={handleConfirmOrder}
+                  disabled={submitting}
+                  whileHover={{ scale: submitting ? 1 : 1.02 }}
+                  whileTap={{ scale: submitting ? 1 : 0.98 }}
+                  style={{ opacity: submitting ? 0.7 : 1 }}
+                >
+                  {submitting ? (
+                    <>
+                      <span className="spinner" /> Confirming...
+                    </>
+                  ) : (
+                    <>
+                      Confirm Order <HiLockClosed size={15} />
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   class TEXT,
   items JSONB NOT NULL DEFAULT '[]'::jsonb,
   payment_method TEXT NOT NULL,
+  payment_proof_url TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
 -- columns the app needs are present. These are safe to run repeatedly.
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS full_name TEXT;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS items JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_proof_url TEXT;
 
 -- ═══════════════════════════════════════
 -- 3. Disable RLS (for development)
