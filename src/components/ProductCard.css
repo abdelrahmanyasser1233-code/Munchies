@@ -46,6 +46,21 @@
   font-size: 2.5rem;
 }
 
+.product-card-discount-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--color-error);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 5px 11px;
+  border-radius: var(--radius-full);
+  z-index: 1;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow-sm);
+}
+
 .product-card-cart-badge {
   position: absolute;
   top: 10px;
@@ -103,6 +118,15 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-tertiary);
+}
+
+.product-card-price .product-card-price-original {
+  font-family: var(--font-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-decoration: line-through;
+  margin-left: 8px;
 }
 
 .product-card-name {

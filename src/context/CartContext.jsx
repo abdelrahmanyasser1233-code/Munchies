@@ -33,13 +33,22 @@ function cartReducer(state, action) {
             : item
         );
       } else {
+        // Use the discount price when it's a valid, lower sale price.
+        const basePrice = Number(product.price) || 0;
+        const discount = Number(product.discount_price);
+        const hasDiscount =
+          product.discount_price != null &&
+          product.discount_price !== '' &&
+          discount > 0 &&
+          discount < basePrice;
         newState = [
           ...state,
           {
             key: itemKey,
             id: product.id,
             name: product.name,
-            price: Number(product.price) || 0,
+            price: hasDiscount ? discount : basePrice,
+            original_price: hasDiscount ? basePrice : null,
             image_url: product.image_url,
             variant: variant || null,
             quantity: quantity,

@@ -79,7 +79,14 @@ export default function Cart({ isOpen, onClose }) {
                         {item.variant && (
                           <div className="cart-item-variant">{item.variant}</div>
                         )}
-                        <div className="cart-item-price">{item.price * item.quantity} EGP</div>
+                        <div className="cart-item-price">
+                          {item.price * item.quantity} EGP
+                          {item.original_price && (
+                            <span className="cart-item-price-original">
+                              {item.original_price * item.quantity} EGP
+                            </span>
+                          )}
+                        </div>
 
                         <div className="cart-item-actions">
                           <motion.button

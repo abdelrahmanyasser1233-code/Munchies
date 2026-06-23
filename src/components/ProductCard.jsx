@@ -25,6 +25,16 @@ export default function ProductCard({ product, index }) {
 
   const [quantity, setQuantity] = useState(1);
 
+  // Sale price handling: valid discount must be a positive number below the price.
+  const basePrice = Number(product.price) || 0;
+  const discount = Number(product.discount_price);
+  const hasDiscount =
+    product.discount_price != null &&
+    product.discount_price !== '' &&
+    discount > 0 &&
+    discount < basePrice;
+  const discountPct = hasDiscount ? Math.round((1 - discount / basePrice) * 100) : 0;
+
   const inCartCount = items
     .filter((item) => item.id === product.id)
     .reduce((sum, item) => sum + item.quantity, 0);
@@ -65,6 +75,9 @@ export default function ProductCard({ product, index }) {
         ) : (
           <div className="product-card-image-placeholder">🍽️</div>
         )}
+        {hasDiscount && (
+          <span className="product-card-discount-badge">-{discountPct}%</span>
+        )}
         {inCartCount > 0 && (
           <span className="product-card-cart-badge">{inCartCount} in cart</span>
         )}
@@ -88,7 +101,16 @@ export default function ProductCard({ product, index }) {
 
         <div className="product-card-footer">
           <div className="product-card-price">
-            {product.price} <span>EGP</span>
+            {hasDiscount ? (
+              <>
+                {discount} <span>EGP</span>
+                <span className="product-card-price-original">{basePrice} EGP</span>
+              </>
+            ) : (
+              <>
+                {product.price} <span>EGP</span>
+              </>
+            )}
           </div>
 
           <div className="product-card-action-group">

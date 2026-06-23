@@ -10,11 +10,15 @@ CREATE TABLE IF NOT EXISTS public.products (
   name TEXT NOT NULL,
   category TEXT,
   price NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  discount_price NUMERIC(10, 2),
   description TEXT,
   image_url TEXT,
   variants_json TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Add the optional sale-price column to existing products tables. Safe to re-run.
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS discount_price NUMERIC(10, 2);
 
 -- ═══════════════════════════════════════
 -- 2. Create Orders Table

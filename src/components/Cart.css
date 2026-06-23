@@ -121,6 +121,14 @@
   font-size: 0.9rem;
 }
 
+.cart-item-price-original {
+  margin-left: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--color-text-tertiary);
+  text-decoration: line-through;
+}
+
 .cart-item-actions {
   display: flex;
   align-items: center;

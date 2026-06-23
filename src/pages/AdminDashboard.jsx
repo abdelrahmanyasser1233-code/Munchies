@@ -43,6 +43,7 @@ export default function AdminDashboard() {
     name: '',
     category: '',
     price: '',
+    discount_price: '',
     description: '',
     image_url: '',
     variants: [],
@@ -95,7 +96,7 @@ export default function AdminDashboard() {
   // ─── Product Modal ───
   const openCreateModal = () => {
     setEditingProduct(null);
-    setFormData({ name: '', category: '', price: '', description: '', image_url: '', variants: [] });
+    setFormData({ name: '', category: '', price: '', discount_price: '', description: '', image_url: '', variants: [] });
     setImageFile(null);
     setImagePreview('');
     setModalOpen(true);
@@ -117,6 +118,7 @@ export default function AdminDashboard() {
       name: product.name || '',
       category: product.category || '',
       price: product.price?.toString() || '',
+      discount_price: product.discount_price != null ? product.discount_price.toString() : '',
       description: product.description || '',
       image_url: product.image_url || '',
       variants,
@@ -172,6 +174,17 @@ export default function AdminDashboard() {
       toast.error('Valid price is required');
       return;
     }
+    if (formData.discount_price !== '' && formData.discount_price != null) {
+      const d = Number(formData.discount_price);
+      if (isNaN(d) || d < 0) {
+        toast.error('Discount price must be a valid number');
+        return;
+      }
+      if (d >= Number(formData.price)) {
+        toast.error('Discount price must be lower than the regular price');
+        return;
+      }
+    }
     if (formData.description && formData.description.length > 500) {
       toast.error('Description must be 500 characters or less');
       return;
@@ -202,6 +215,10 @@ export default function AdminDashboard() {
         name: formData.name.trim(),
         category: formData.category.trim() || null,
         price: Number(formData.price),
+        discount_price:
+          formData.discount_price !== '' && formData.discount_price != null
+            ? Number(formData.discount_price)
+            : null,
         description: formData.description.trim() || null,
         image_url: imageUrl || null,
         variants: formData.variants.filter((v) => v.trim()),
@@ -442,7 +459,27 @@ export default function AdminDashboard() {
                           ) : '—'}
                         </td>
                         <td>
-                          <span className="admin-product-price">{product.price} EGP</span>
+                          {product.discount_price != null &&
+                          product.discount_price !== '' &&
+                          Number(product.discount_price) > 0 &&
+                          Number(product.discount_price) < Number(product.price) ? (
+                            <span className="admin-product-price">
+                              {product.discount_price} EGP
+                              <span
+                                style={{
+                                  marginLeft: 6,
+                                  color: 'var(--color-text-tertiary)',
+                                  textDecoration: 'line-through',
+                                  fontWeight: 500,
+                                  fontSize: '0.85em',
+                                }}
+                              >
+                                {product.price} EGP
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="admin-product-price">{product.price} EGP</span>
+                          )}
                         </td>
                         <td>
                           <div className="admin-table-actions">
@@ -669,7 +706,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Price & Category */}
+                {/* Price & Discount Price */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>
                   <div className="form-group">
                     <label className="form-label">Price (EGP) *</label>
@@ -684,15 +721,32 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Category</label>
+                    <label className="form-label">Discount Price (EGP)</label>
                     <input
-                      type="text"
+                      type="number"
                       className="form-input"
-                      placeholder="e.g. Snacks"
-                      value={formData.category}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
+                      placeholder="Optional sale price"
+                      min="0"
+                      step="0.5"
+                      value={formData.discount_price}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, discount_price: e.target.value }))}
                     />
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', marginTop: '4px' }}>
+                      Leave empty for no discount. Must be lower than the price.
+                    </div>
                   </div>
+                </div>
+
+                {/* Category */}
+                <div className="form-group">
+                  <label className="form-label">Category</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Snacks"
+                    value={formData.category}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
+                  />
                 </div>
 
                 {/* Variants */}

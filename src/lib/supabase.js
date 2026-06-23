@@ -41,31 +41,45 @@ export async function fetchProductById(id) {
   return data;
 }
 
-export async function createProduct(productData) {
-  const { data, error } = await supabase
-    .from('products')
-    .insert([productData])
-    .select();
+// Drop a column the DB doesn't have yet (e.g. discount_price before the
+// migration is run) and signal whether a retry makes sense.
+function isMissingColumnError(error, column) {
+  const msg = (error?.message || '').toLowerCase();
+  return error?.code === 'PGRST204' || msg.includes(column) || msg.includes('schema cache');
+}
 
-  if (error) {
+export async function createProduct(productData) {
+  let payload = productData;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data, error } = await supabase.from('products').insert([payload]).select();
+    if (!error) return data?.[0] || data;
+
+    if (attempt === 0 && 'discount_price' in payload && isMissingColumnError(error, 'discount_price')) {
+      const { discount_price, ...rest } = payload; // eslint-disable-line no-unused-vars
+      payload = rest;
+      console.warn('createProduct: discount_price column missing — saving without it.');
+      continue;
+    }
     console.error('createProduct error:', error);
     throw error;
   }
-  return data?.[0] || data;
 }
 
 export async function updateProduct(id, updates) {
-  const { data, error } = await supabase
-    .from('products')
-    .update(updates)
-    .eq('id', id)
-    .select();
+  let payload = updates;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data, error } = await supabase.from('products').update(payload).eq('id', id).select();
+    if (!error) return data?.[0] || data;
 
-  if (error) {
+    if (attempt === 0 && 'discount_price' in payload && isMissingColumnError(error, 'discount_price')) {
+      const { discount_price, ...rest } = payload; // eslint-disable-line no-unused-vars
+      payload = rest;
+      console.warn('updateProduct: discount_price column missing — saving without it.');
+      continue;
+    }
     console.error('updateProduct error:', error);
     throw error;
   }
-  return data?.[0] || data;
 }
 
 export async function deleteProduct(id) {
